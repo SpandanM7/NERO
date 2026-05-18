@@ -28,7 +28,18 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-white min-h-screen`}>
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 pt-24 pb-10">
+        {/*
+          WHY WE REMOVED max-w-7xl AND px-4 HERE:
+          The hero section needs to be 100vw (full bleed — no side margins,
+          no max-width cap). If we keep padding here, we'd have to fight it
+          with negative margins on every full-bleed section.
+
+          Instead: the homepage manages its own layout. The hero is full-bleed.
+          The shelf content area has its own px-4 md:px-8 lg:px-12.
+          Other pages (detail, search) add their own max-w-7xl + mx-auto.
+          This is more scalable as you add pages with different layout needs.
+        */}
+        <main className="pt-16 pb-10">
           {children}
         </main>
         <Footer />
