@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { MediaItem, Movie, TVShow } from '@/types/tmdb'
+import { useState, useEffect, useRef } from 'react'
+import { MediaItem } from '@/types/tmdb'
 import SearchResultCard from './SearchResultCard'
 
 type Filter = 'all' | 'movie' | 'tv'
@@ -20,9 +20,13 @@ export default function SearchResults({ initialItems, initialTotalPages, query }
   const [items, setItems] = useState<MediaItem[]>(initialItems)
   const [filter, setFilter] = useState<Filter>('all')
   const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(initialTotalPages)
-  const [loadError, setLoadError] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [totalPages] = useState(initialTotalPages)
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [hasMore, setHasMore] = useState(initialTotalPages > 1)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  // Prevent double-firing from IntersectionObserver
+  const isFetchingRef = useRef(false)
 
   const movieCount = items.filter(i => getMediaType(i) === 'movie').length
   const tvCount = items.filter(i => getMediaType(i) === 'tv').length
@@ -31,23 +35,54 @@ export default function SearchResults({ initialItems, initialTotalPages, query }
     ? items
     : items.filter(i => getMediaType(i) === filter)
 
-  async function loadMore() {
-    const nextPage = page + 1
-    setLoadError(false)
+  async function loadMore(currentPage: number) {
+    if (isFetchingRef.current || !hasMore) return
+    isFetchingRef.current = true
+    setIsLoading(true)
+    setHasError(false)
 
-    startTransition(async () => {
-      try {
-        const res = await fetch(`/api/tmdb/search?q=${encodeURIComponent(query)}&page=${nextPage}`)
-        if (!res.ok) throw new Error()
-        const data = await res.json()
-        setItems(prev => [...prev, ...(data.results as MediaItem[])])
-        setPage(nextPage)
-        setTotalPages(data.total_pages)
-      } catch {
-        setLoadError(true)
+    try {
+      const nextPage = currentPage + 1
+      const res = await fetch(`/api/tmdb/search?q=${encodeURIComponent(query)}&page=${nextPage}`)
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+
+      const newItems = (data.results as MediaItem[]).filter(
+        item => ('title' in item ? item.title : item.name) && item.poster_path
+      )
+
+      setItems(prev => [...prev, ...newItems])
+      setPage(nextPage)
+
+      // Stop at page 10 (200 results) — TMDB goes to 500 but that's overkill
+      if (nextPage >= Math.min(data.total_pages, 10)) {
+        setHasMore(false)
       }
-    })
+    } catch {
+      setHasError(true)
+    } finally {
+      setIsLoading(false)
+      isFetchingRef.current = false
+    }
   }
+
+  // Infinite scroll via IntersectionObserver on the sentinel div
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isFetchingRef.current && hasMore && !hasError) {
+          loadMore(page)
+        }
+      },
+      { rootMargin: '300px' }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [page, hasMore, hasError])
 
   const tabs: { label: string; value: Filter; count: number }[] = [
     { label: 'All', value: 'all', count: items.length },
@@ -79,16 +114,14 @@ export default function SearchResults({ initialItems, initialTotalPages, query }
         ))}
       </div>
 
-      {/* Results */}
+      {/* Results list */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <span className="text-5xl mb-4">🎬</span>
           <p className="text-white font-semibold text-lg mb-2">
-            No {filter === 'all' ? 'results' : filter === 'movie' ? 'movies' : 'TV shows'} found
+            No {filter === 'movie' ? 'movies' : 'TV shows'} in these results
           </p>
-          <p className="text-gray-400 text-sm">
-            Try switching to a different filter above
-          </p>
+          <p className="text-gray-400 text-sm">Try switching to a different filter</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -98,28 +131,37 @@ export default function SearchResults({ initialItems, initialTotalPages, query }
         </div>
       )}
 
-      {/* Load more */}
-      {filter === 'all' && page < Math.min(totalPages, 10) && filtered.length > 0 && (
-        <div className="mt-8 flex flex-col items-center gap-3">
-          {loadError && (
-            <p className="text-red-400 text-sm">Failed to load more. Try again.</p>
-          )}
-          <button
-            onClick={loadMore}
-            disabled={isPending}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-200 active:scale-95"
-          >
-            {isPending ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                Loading...
-              </>
-            ) : (
-              'Load More'
-            )}
-          </button>
-          <p className="text-gray-600 text-xs">Page {page} of {Math.min(totalPages, 10)}</p>
+      {/* Sentinel div — IntersectionObserver watches this to trigger next page */}
+      {filter === 'all' && <div ref={sentinelRef} className="h-4" />}
+
+      {/* Loading spinner */}
+      {isLoading && (
+        <div className="flex justify-center py-8">
+          <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         </div>
+      )}
+
+      {/* Error with manual retry */}
+      {hasError && (
+        <div className="flex flex-col items-center gap-3 py-8">
+          <p className="text-red-400 text-sm">Failed to load more results.</p>
+          <button
+            onClick={() => {
+              setHasError(false)
+              loadMore(page)
+            }}
+            className="text-xs text-white/60 border border-white/20 px-4 py-2 rounded-lg hover:bg-white/10 transition"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* End of results */}
+      {!hasMore && items.length > 0 && !isLoading && filter === 'all' && (
+        <p className="text-center text-gray-600 text-xs py-8">
+          All {items.length} results loaded
+        </p>
       )}
     </div>
   )

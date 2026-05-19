@@ -10,7 +10,6 @@ export default async function SearchPage({ searchParams }: Props) {
   const { q } = await searchParams
   const query = q?.trim() ?? ''
 
-  // ── Empty query state ─────────────────────────────────────────────────────
   if (!query) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10">
@@ -25,7 +24,6 @@ export default async function SearchPage({ searchParams }: Props) {
     )
   }
 
-  // ── Fetch ─────────────────────────────────────────────────────────────────
   let data: Awaited<ReturnType<typeof searchMulti>> | null = null
   let fetchError = false
 
@@ -35,12 +33,11 @@ export default async function SearchPage({ searchParams }: Props) {
     fetchError = true
   }
 
-  // ── Error state ───────────────────────────────────────────────────────────
   if (fetchError || !data) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10">
         <h1 className="text-white text-2xl font-bold mb-2">
-          Search results for <span className="text-red-400">"{query}"</span>
+          Results for <span className="text-red-400">"{query}"</span>
         </h1>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <span className="text-5xl mb-4">⚠️</span>
@@ -53,12 +50,10 @@ export default async function SearchPage({ searchParams }: Props) {
     )
   }
 
-  // Filter out items without a title/name or poster (low quality results)
   const items = (data.results as MediaItem[]).filter(
     item => ('title' in item ? item.title : item.name) && item.poster_path
   )
 
-  // ── No results state ──────────────────────────────────────────────────────
   if (items.length === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10">
@@ -76,7 +71,6 @@ export default async function SearchPage({ searchParams }: Props) {
     )
   }
 
-  // ── Results ───────────────────────────────────────────────────────────────
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
       <div className="mb-8">
@@ -84,11 +78,14 @@ export default async function SearchPage({ searchParams }: Props) {
           Results for <span className="text-red-400">"{query}"</span>
         </h1>
         <p className="text-gray-400 text-sm">
-          {data.total_results.toLocaleString()} results found
+          {data.total_results.toLocaleString()} results · showing {items.length}
         </p>
       </div>
 
+      {/* key={query} remounts SearchResults on every new search,
+          resetting items/page/filter so old results never bleed in */}
       <SearchResults
+        key={query}
         initialItems={items}
         initialTotalPages={data.total_pages}
         query={query}
