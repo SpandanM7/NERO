@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Season, Episode, SeasonDetails } from '@/types/tmdb'
 import { getImageUrl } from '@/lib/tmdb'
-//import { getSeasonDetails } from '@/lib/tmdb'
 
 interface Props {
   tvId: number
@@ -16,25 +15,31 @@ export default function SeasonEpisodeSelector({ tvId, seasons }: Props) {
   const [selectedSeason, setSelectedSeason] = useState(validSeasons[0]?.season_number ?? 1)
   const [seasonData, setSeasonData] = useState<SeasonDetails | null>(null)
   const [loading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState(false)
 
   async function fetchSeason(seasonNumber: number) {
-  setLoading(true)
-  setSelectedSeason(seasonNumber)
-  try {
-    const res = await fetch(`/api/season?tvId=${tvId}&season=${seasonNumber}`)
-    const data = await res.json()
-    setSeasonData(data)
-  } catch (e) {
-    console.error(e)
-  } finally {
-    setLoading(false)
-  }
-}
+    setLoading(true)
+    setSelectedSeason(seasonNumber)
+    setFetchError(false)
+    setSeasonData(null)
+    try {
+      const res = await fetch(`/api/season?tvId=${tvId}&season=${seasonNumber}`)
+      const data = await res.json()
 
-  // Fetch first season on mount
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Failed')
+
+      setSeasonData(data)
+    } catch (e) {
+      console.error('fetchSeason error:', e)
+      setFetchError(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-  fetchSeason(selectedSeason)
-}, [])
+    fetchSeason(selectedSeason)
+  }, [])
 
   return (
     <section className="mt-10">
@@ -57,14 +62,39 @@ export default function SeasonEpisodeSelector({ tvId, seasons }: Props) {
         ))}
       </div>
 
-      {/* Episodes */}
+      {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-10">
           <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
-      {!loading && seasonData && (
+      {/* Error */}
+      {!loading && fetchError && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <span className="text-4xl mb-3">⚠️</span>
+          <p className="text-white font-semibold mb-1">Failed to load episodes</p>
+          <p className="text-gray-400 text-sm mb-4">Couldn't fetch this season. Try again.</p>
+          <button
+            onClick={() => fetchSeason(selectedSeason)}
+            className="text-xs text-white/60 border border-white/20 px-4 py-2 rounded-lg hover:bg-white/10 transition"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* No episodes */}
+      {!loading && !fetchError && seasonData && (!seasonData.episodes || seasonData.episodes.length === 0) && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <span className="text-4xl mb-3">📭</span>
+          <p className="text-white font-semibold mb-1">No episodes available</p>
+          <p className="text-gray-400 text-sm">This season has no episode data yet.</p>
+        </div>
+      )}
+
+      {/* Episodes */}
+      {!loading && !fetchError && seasonData && seasonData.episodes?.length > 0 && (
         <div className="flex flex-col gap-3">
           {seasonData.episodes.map((episode: Episode) => (
             <EpisodeCard key={episode.id} episode={episode} tvId={tvId} />
@@ -110,10 +140,7 @@ function EpisodeCard({ episode, tvId }: { episode: Episode; tvId: number }) {
             {episode.vote_average > 0 && <span>★ {episode.vote_average.toFixed(1)}</span>}
           </div>
 
-          {/* Play Button */}
-          <button
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 active:scale-95 transition-all text-white text-xs font-bold px-4 py-2 rounded-lg"
-          >
+          <button className="flex items-center gap-2 bg-red-600 hover:bg-red-700 active:scale-95 transition-all text-white text-xs font-bold px-4 py-2 rounded-lg">
             ▶ Play
           </button>
         </div>
