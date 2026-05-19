@@ -6,6 +6,7 @@ const ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN
 const headers = {
   Authorization: `Bearer ${ACCESS_TOKEN}`,
   'Content-Type': 'application/json',
+    'Accept-Encoding': 'identity', 
 }
 
 async function fetcher<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
