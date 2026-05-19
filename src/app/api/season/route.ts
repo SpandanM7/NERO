@@ -1,3 +1,5 @@
+//api/season/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getSeasonDetails } from '@/lib/tmdb'
 

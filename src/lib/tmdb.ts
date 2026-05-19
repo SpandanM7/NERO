@@ -6,6 +6,7 @@ const ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN
 const headers = {
   Authorization: `Bearer ${ACCESS_TOKEN}`,
   'Content-Type': 'application/json',
+    'Accept-Encoding': 'identity', 
 }
 
 async function fetcher<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
@@ -22,17 +23,16 @@ async function fetcher<T>(endpoint: string, params: Record<string, string> = {})
 }
 
 
-
 async function fetcherWithRetry<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
   let lastError: unknown
 
-  for (let attempt = 1; attempt <= 5; attempt++) {
+  for (let attempt = 1; attempt <= 3; attempt++) {   // 3 not 5
     try {
       return await fetcher<T>(endpoint, params)
     } catch (e) {
       lastError = e
-      if (attempt < 5) {
-        await new Promise(r => setTimeout(r, attempt * 700))
+      if (attempt < 3) {
+        await new Promise(r => setTimeout(r, attempt * 300))  // 300ms not 700ms
       }
     }
   }
