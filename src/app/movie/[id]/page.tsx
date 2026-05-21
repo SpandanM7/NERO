@@ -1,4 +1,4 @@
-import { getMovieDetails, getMovieCredits } from '@/lib/tmdb'
+import { getMovieDetails } from '@/lib/tmdb'
 import DetailHero from '@/components/movie/DetailHero'
 import CastRow from '@/components/movie/CastRow'
 import { notFound } from 'next/navigation'
@@ -15,10 +15,8 @@ export default async function MoviePage({ params }: Props) {
   if (isNaN(tmdbId)) notFound()
 
   try {
-    const [movie, credits] = await Promise.all([
-      getMovieDetails(tmdbId),
-      getMovieCredits(tmdbId),
-    ])
+    const movie = await getMovieDetails(tmdbId)
+    const credits = movie.credits
 
     return (
       <div>

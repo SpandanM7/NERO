@@ -31,7 +31,7 @@ export default function DetailHero({ item, mediaType }: Props) {
     : null
 
   const posterUrl = getImageUrl(item.poster_path, 'w500')
-  const backdropUrl = getImageUrl(item.backdrop_path, 'original')
+  const backdropUrl = getImageUrl(item.backdrop_path, 'w1280')
 
   const base = process.env.NEXT_PUBLIC_EMBED_BASE
   const embedUrl = mediaType === 'movie'

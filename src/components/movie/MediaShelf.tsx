@@ -41,10 +41,14 @@ export default function MediaShelf({ title, items, mediaType }: Props) {
   if (!items.length) return null
 
   return (
-    <section className="mb-10 group/shelf">
-      <h2 className="text-white text-xl font-bold mb-4 px-4 md:px-0">
-        {title}
-      </h2>
+    <section className="mb-12 group/shelf">
+  <div className="flex items-center gap-4 mb-5 px-4 md:px-0">
+    <span className="w-[3px] h-4 rounded-full bg-[#e63030] shrink-0" />
+    <h2 className="text-[11px] font-semibold tracking-[0.16em] uppercase text-white/60 shrink-0">
+      {title}
+    </h2>
+    <div className="flex-1 h-px bg-white/[0.06]" />
+  </div>
 
       <div className="relative">
 
