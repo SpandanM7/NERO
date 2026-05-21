@@ -5,6 +5,7 @@ import HeroSkeleton from '@/components/home/HeroSkeleton'
 import FirstShelf from '@/components/home/FirstShelf'
 import ShelfSkeleton from '@/components/home/ShelfSkeleton'
 import LazyShelvesWrapper from '@/components/home/LazyShelvesWrapper'
+import HeroAdStrip from '@/components/ads/Heroadstrip'
 
 /**
  * WHY THIS STRUCTURE:
@@ -33,6 +34,8 @@ export default function HomePage() {
       <Suspense fallback={<HeroSkeleton />}>
         <HeroDataFetcher />
       </Suspense>
+
+       <HeroAdStrip />
 
       {/* ── Content shelves ──────────────────────────────────────── */}
       <div className="px-4 md:px-8 lg:px-12 mt-8">
