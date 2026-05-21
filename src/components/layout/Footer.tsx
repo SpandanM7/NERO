@@ -2,27 +2,38 @@ import Link from 'next/link'
 
 export default function Footer() {
   return (
-    <footer className="bg-black border-t border-white/10 mt-20">
-      <div className="max-w-7xl mx-auto px-4 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+    <footer className="bg-[#050505] border-t border-white/[0.05] mt-24">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-5">
 
-        <div className="text-red-500 font-black text-xl tracking-tight">
-          NERO<span className="text-white">MOVIES</span>
+        {/* Logo */}
+        <span
+          className="text-white/30 text-lg tracking-[0.15em] leading-none shrink-0"
+          style={{ fontFamily: "'Bebas Neue', 'Arial Black', sans-serif" }}
+        >
+          <span className="text-[#e63030]/50">NERO</span>MOVIES
+        </span>
+
+        {/* Links */}
+        <div className="flex items-center gap-6">
+          {[['/', 'Home'], ['/movies', 'Movies'], ['/shows', 'TV Shows'], ['/search', 'Search']].map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              className="text-[11px] font-medium tracking-[0.1em] uppercase text-white/20 hover:text-white/50 transition-colors duration-200"
+            >
+              {label}
+            </Link>
+          ))}
         </div>
 
-        <div className="flex items-center gap-6 text-sm text-gray-400">
-          <Link href="/" className="hover:text-white transition-colors">Home</Link>
-          <Link href="/movies" className="hover:text-white transition-colors">Movies</Link>
-          <Link href="/shows" className="hover:text-white transition-colors">TV Shows</Link>
-          <Link href="/search" className="hover:text-white transition-colors">Search</Link>
-        </div>
-
-        <p className="text-gray-600 text-xs">
-          Data provided by{' '}
+        {/* TMDB attribution */}
+        <p className="text-[11px] tracking-[0.06em] text-white/15">
+          Data by{' '}
           <a
             href="https://www.themoviedb.org"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-white/30 hover:text-white/55 transition-colors duration-200"
           >
             TMDB
           </a>

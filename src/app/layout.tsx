@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import { Bebas_Neue } from 'next/font/google'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -12,6 +13,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+})
+
+const bebasNeue = Bebas_Neue({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-bebas',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -26,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-white min-h-screen`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased bg-[#0a0a0a] text-white min-h-screen`}>
         <Navbar />
         {/*
           WHY WE REMOVED max-w-7xl AND px-4 HERE:

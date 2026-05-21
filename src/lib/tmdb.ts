@@ -93,7 +93,7 @@ export async function getSeasonDetails(tvId: number, seasonNumber: number) {
 
 // ─── Image helper ────────────────────────────────────────────────────────────
 
-export function getImageUrl(path: string | null, size: 'w300' | 'w500' | 'w780' | 'original' = 'w500') {
+export function getImageUrl(path: string | null, size: 'w300' | 'w500' | 'w780' |'w1280' | 'original' = 'w500') {
   if (!path) return null
   return `${process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE}/${size}${path}`
 }
