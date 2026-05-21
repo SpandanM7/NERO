@@ -67,21 +67,16 @@ export async function getNowPlayingMovies() {
 }
 
 // ─── Detail pages ────────────────────────────────────────────────────────────
-
 export async function getMovieDetails(id: number) {
-  return fetcherWithRetry<MovieDetails>(`/movie/${id}`)
+  return fetcherWithRetry<MovieDetails & { credits: Credits }>(`/movie/${id}`, {
+    append_to_response: 'credits',
+  })
 }
 
 export async function getTVDetails(id: number) {
-  return fetcherWithRetry<TVDetails>(`/tv/${id}`)
-}
-
-export async function getMovieCredits(id: number) {
-  return fetcherWithRetry<Credits>(`/movie/${id}/credits`)
-}
-
-export async function getTVCredits(id: number) {
-  return fetcherWithRetry<Credits>(`/tv/${id}/credits`)
+  return fetcherWithRetry<TVDetails & { credits: Credits }>(`/tv/${id}`, {
+    append_to_response: 'credits',
+  })
 }
 
 // ─── Search ──────────────────────────────────────────────────────────────────

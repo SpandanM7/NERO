@@ -1,4 +1,4 @@
-import { getTVDetails, getTVCredits } from '@/lib/tmdb'
+import { getTVDetails } from '@/lib/tmdb'
 import DetailHero from '@/components/movie/DetailHero'
 import CastRow from '@/components/movie/CastRow'
 import SeasonEpisodeSelector from '@/components/movie/SeasonEpisodeSelector'
@@ -16,10 +16,8 @@ export default async function TVPage({ params }: Props) {
   if (isNaN(tmdbId)) notFound()
 
   try {
-    const [show, credits] = await Promise.all([
-      getTVDetails(tmdbId),
-      getTVCredits(tmdbId),
-    ])
+    const show = await getTVDetails(tmdbId)
+    const credits = show.credits
 
     return (
       <div>
